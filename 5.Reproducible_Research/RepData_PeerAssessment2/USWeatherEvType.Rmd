@@ -1,0 +1,100 @@
+---
+title: "United States Weather Events"
+author: "Ferreira, Arthur"
+date: "Sunday, February 22, 2015"
+output: html_document
+---
+```{r echo=TRUE}
+library(ggplot2)
+```
+##Synopsis
+In this analysis we try to identify over the past few years , which is the most harmful weather type event in the United States based on deaths , injuries and property damage , using the Storm database from 1950 to 2011 provided by the National Oceanic and Atmospheric Administration 's (NOAA ).
+
+###Data Processing
+
+Loading and converting the data
+```{r echo=TRUE,cache=TRUE}
+dtWeather<- read.csv("data//repdata-data-StormData.csv",header = T)
+dtWeather$BGN_DATE<-as.Date(dtWeather$BGN_DATE,format="%m/%d/%Y")
+dtWeather$Month <- format(dtWeather$BGN_DATE,"%m")
+dtWeather$Year <- format(dtWeather$BGN_DATE,"%Y")
+```
+##Results
+
+###Fatalities and Injuries
+
+Here is identified what event type is the most harmful by aggregating and ordering the data.
+
+```{r cache=TRUE,echo=TRUE}
+dtFatalities_Injuries <- aggregate(FATALITIES+INJURIES ~ EVTYPE, dtWeather, sum)
+dtFatalities_Injuries<- dtFatalities_Injuries[order(-dtFatalities_Injuries$"FATALITIES + INJURIES"),]
+head(dtFatalities_Injuries)
+strFirstResult<- dtFatalities_Injuries[1,1]
+```
+
+Here is a simple Top 10 plot showing the distribution across the states for the most harmful type
+
+```{r echo=TRUE}
+dtFatalities_InjuriesbyState <- aggregate(FATALITIES+INJURIES ~  STATE, dtWeather[dtWeather$EVTYPE == strFirstResult,], sum)
+dtFatalities_InjuriesbyState$STATE<-factor(dtFatalities_InjuriesbyState$STATE,as.character(dtFatalities_InjuriesbyState$STATE))
+dtFatalities_InjuriesbyState <- dtFatalities_InjuriesbyState[order(-dtFatalities_InjuriesbyState$"FATALITIES + INJURIES"),]
+dtFatalities_InjuriesbyState<-head(dtFatalities_InjuriesbyState,10)
+```
+
+```{r echo=TRUE}
+ggplot(data=dtFatalities_InjuriesbyState, aes(x = STATE, y = dtFatalities_InjuriesbyState$"FATALITIES + INJURIES")) +  geom_bar(stat = "identity") +  xlab("State") +  ylab("Fatalities and Injuries") +  ggtitle(paste("Top 10 States Fatalities and Injuries by",strFirstResult))
+```
+
+Here is a plot showing the fatalities and injuries along years and months
+
+```{r echo=TRUE,cache=TRUE}
+dtFatalities_InjuriesbyMonth <- aggregate(FATALITIES+INJURIES ~ Month, dtWeather[dtWeather$EVTYPE == strFirstResult,], sum)
+dtFatalities_InjuriesbyYear <- aggregate(FATALITIES+INJURIES ~  Year, dtWeather[dtWeather$EVTYPE == strFirstResult,], sum)
+dtFatalities_InjuriesbyYear <- dtFatalities_InjuriesbyYear[order(dtFatalities_InjuriesbyYear$Year),]
+```
+
+```{r echo=TRUE}
+ggplot(data=dtFatalities_InjuriesbyMonth, aes(x = Month, y = dtFatalities_InjuriesbyMonth$"FATALITIES + INJURIES")) +  geom_bar(stat = "identity") +  xlab("Month") +  ylab("Fatalities and Injuries") +  ggtitle(paste(strFirstResult,"Fatalities and Injuries by Month"))
+ggplot(data=dtFatalities_InjuriesbyYear, aes(x = Year, y = dtFatalities_InjuriesbyYear$"FATALITIES + INJURIES")) +  geom_bar(stat = "identity") +  xlab("Year") +  ylab("Fatalities and Injuries") +  ggtitle(paste(strFirstResult, "Fatalities and Injuries over the years"))
+
+```
+
+
+###Property Damage
+
+Here is identified what event type is the most harmful by aggregating and ordering the data.
+
+```{r echo=TRUE,cache=TRUE}
+dtPropDamage <- aggregate(PROPDMG ~ EVTYPE, dtWeather, sum)
+dtPropDamage<- dtPropDamage[order(-dtPropDamage$PROPDMG),]
+strFirstResult<- dtFatalities_Injuries[1,1]
+head(dtPropDamage)
+```
+
+Here is a simple Top 10 plot showing the distribution across the states for the most harmful type
+
+```{r echo=TRUE,cache=TRUE}
+dtPropDamagebyState <- aggregate(PROPDMG ~  STATE, dtWeather[dtWeather$EVTYPE == strFirstResult,], sum)
+dtPropDamagebyState$STATE<-factor(dtPropDamagebyState$STATE,as.character(dtPropDamagebyState$STATE))
+dtPropDamagebyState <- dtPropDamagebyState[order(-dtPropDamagebyState$PROPDMG),]
+dtPropDamagebyState<-head(dtPropDamagebyState,10)
+```
+
+```{r echo=TRUE}
+ggplot(data=dtPropDamagebyState, aes(x = STATE, y = dtPropDamagebyState$PROPDMG)) +  geom_bar(stat = "identity") +  xlab("State") +  ylab("Property Damage") +  ggtitle("Top 10 States Property Damage")
+
+```
+
+Here is a plot showing the property damage along years and months
+
+```{r echo=TRUE,cache=TRUE}
+dtPropDamagebyMonth <- aggregate(PROPDMG ~  Month, dtWeather[dtWeather$EVTYPE == strFirstResult,], sum)
+dtPropDamagebyYear <- aggregate(PROPDMG ~  Year, dtWeather[dtWeather$EVTYPE == strFirstResult,], sum)
+dtPropDamagebyYear <- dtPropDamagebyYear[order(dtPropDamagebyYear$Year),]
+```
+
+```{r echo=TRUE}
+ggplot(data=dtPropDamagebyMonth, aes(x = Month, y = dtPropDamagebyMonth$PROPDMG)) +  geom_bar(stat = "identity") +  xlab("Month") +  ylab("Property Damage") +  ggtitle(paste(strFirstResult,"Property Damage by Month"))
+ggplot(data=dtPropDamagebyYear, aes(x = Year, y = dtPropDamagebyYear$PROPDMG)) +  geom_bar(stat = "identity") +  xlab("Year") +  ylab("Property Damage") +  ggtitle(paste(strFirstResult, "Property Damage over the years"))
+
+```
